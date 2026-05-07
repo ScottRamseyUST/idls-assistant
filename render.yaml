@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: idls-assistant
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
