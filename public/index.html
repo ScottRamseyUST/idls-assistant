@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDLS Assistant — Tulsa</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap');
+:root {
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2333;--border:#30363d;
+  --accent:#f0a500;--accent2:#e05c00;--text:#e6edf3;--muted:#7d8590;
+  --dim:#484f58;--green:#3fb950;--red:#f85149;--user:#1f3a5f;--ai:#1c2333;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
+
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.logo{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:#000;flex-shrink:0;}
+.header h1{font-size:14px;font-weight:600;}
+.header p{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
+.dot{width:7px;height:7px;background:var(--green);border-radius:50%;margin-left:auto;box-shadow:0 0 6px var(--green);}
+
+.chips{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;gap:7px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;}
+.chips::-webkit-scrollbar{display:none;}
+.chip{padding:4px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(240,165,0,.08);}
+
+.chat{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+
+.welcome{text-align:center;padding:48px 20px;}
+.welcome .icon{font-size:38px;margin-bottom:10px;}
+.welcome h2{font-size:18px;font-weight:600;margin-bottom:8px;}
+.welcome p{font-size:13px;color:var(--muted);max-width:360px;margin:0 auto;line-height:1.6;}
+
+.msg{display:flex;gap:10px;max-width:780px;animation:up .2s ease;}
+@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{margin-left:auto;flex-direction:row-reverse;}
+.avatar{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:2px;}
+.avatar.ai{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-family:'DM Mono',monospace;}
+.avatar.user{background:var(--user);border:1px solid #2d4a6e;font-size:13px;}
+
+.bubble{padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.65;max-width:660px;}
+.bubble.ai{background:var(--ai);border:1px solid var(--border);border-top-left-radius:3px;}
+.bubble.user{background:var(--user);border:1px solid #2d4a6e;border-top-right-radius:3px;color:#c9d8ee;}
+.bubble strong{color:var(--accent);}
+.bubble code{font-family:'DM Mono',monospace;font-size:11px;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:3px;color:#79c0ff;}
+.bubble ol,.bubble ul{padding-left:18px;margin:5px 0;}
+.bubble li{margin-bottom:3px;}
+.bubble p{margin-bottom:6px;}
+.bubble p:last-child{margin-bottom:0;}
+.tip{background:rgba(63,185,80,.08);border-left:3px solid var(--green);padding:7px 10px;border-radius:0 5px 5px 0;margin-top:7px;font-size:12px;color:#aef0b5;}
+.warn{background:rgba(240,165,0,.08);border-left:3px solid var(--accent);padding:7px 10px;border-radius:0 5px 5px 0;margin-top:7px;font-size:12px;color:#ffd47a;}
+.err{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);color:#ffa29e;border-radius:7px;padding:10px 14px;font-size:13px;}
+.src{font-size:10px;color:var(--dim);margin-top:7px;display:flex;align-items:center;gap:4px;}
+.src::before{content:'';width:5px;height:5px;background:var(--accent);border-radius:50%;display:inline-block;}
+
+.typing{display:flex;gap:4px;align-items:center;padding:2px 0;}
+.typing span{width:6px;height:6px;background:var(--muted);border-radius:50%;animation:bounce 1.2s infinite;}
+.typing span:nth-child(2){animation-delay:.2s;}
+.typing span:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+.input-area{background:var(--surface);border-top:1px solid var(--border);padding:14px 20px;flex-shrink:0;}
+.input-row{display:flex;gap:8px;align-items:flex-end;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;transition:border-color .2s;}
+.input-row:focus-within{border-color:var(--accent);}
+#inp{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;resize:none;max-height:100px;min-height:20px;line-height:1.5;}
+#inp::placeholder{color:var(--dim);}
+#send{width:30px;height:30px;background:var(--accent);border:none;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;color:#000;}
+#send:hover{background:#ffc533;transform:scale(1.05);}
+#send:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+.hint{font-size:10px;color:var(--dim);text-align:center;margin-top:6px;font-family:'DM Mono',monospace;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">AI</div>
+  <div>
+    <h1>IDLS Assistant</h1>
+    <p>Tulsa · Williams Sonoma · SOP Knowledge Base</p>
+  </div>
+  <div class="dot"></div>
+</div>
+
+<div class="chips" id="chips"></div>
+
+<div class="chat" id="chat">
+  <div class="welcome" id="welcome">
+    <div class="icon">📋</div>
+    <h2>IDLS Help Assistant</h2>
+    <p>Ask any question about the IDLS platform in plain English. Tap a shortcut above or type below — all answers come directly from your SOP documents.</p>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="input-row">
+    <textarea id="inp" rows="1" placeholder="Ask anything about IDLS... e.g. How do I optimize a route?"></textarea>
+    <button id="send" title="Send">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+  <div class="hint">Enter to send · Shift+Enter for new line · Answers sourced from IDLS SOPs</div>
+</div>
+
+<script>
+const CHIPS = [
+  ["➕ Add Driver","How do I add a new driver?"],
+  ["🗺 Routing","How do I open the Routing Manager and build routes?"],
+  ["🚚 Dispatch","How do I dispatch for today's deliveries?"],
+  ["✅ Check In","How do I check in a completed delivery?"],
+  ["📦 Add Order","How do I add a new customer order?"],
+  ["🛻 Add Truck","How do I add a truck to the system?"],
+  ["🔍 Search Orders","How do I search for an order?"],
+  ["👤 Add User","How do I add a new user?"],
+  ["🏭 WMS Login","How do I log into the WMS warehouse system?"],
+  ["📍 Today's Routes","How do I view today's routes on the map?"],
+  ["💲 Accessorials","How do I add an accessorial charge?"],
+  ["📮 Hub Finder","How do I find which hub services a zip code?"],
+  ["🆘 Support","How do I contact IDLS support?"],
+  ["🗂 Menu Guide","What are all the main menu tabs and what does each do?"],
+  ["📅 Self-Scheduling","How do I set up customer self-scheduling?"],
+  ["📊 Allocations","How do allocations work — Allocated vs Scheduled?"],
+];
+
+const chipsEl = document.getElementById("chips");
+CHIPS.forEach(([label, q]) => {
+  const b = document.createElement("button");
+  b.className = "chip"; b.textContent = label;
+  b.onclick = () => send(q);
+  chipsEl.appendChild(b);
+});
+
+let history = [], loading = false;
+
+const chatEl = document.getElementById("chat");
+const inp = document.getElementById("inp");
+const sendBtn = document.getElementById("send");
+
+inp.addEventListener("keydown", e => { if (e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();} });
+inp.addEventListener("input", () => { inp.style.height="auto"; inp.style.height=Math.min(inp.scrollHeight,100)+"px"; });
+sendBtn.addEventListener("click", () => send());
+
+function scrollBottom(){ chatEl.scrollTop = chatEl.scrollHeight; }
+
+function removeWelcome(){ const w=document.getElementById("welcome"); if(w) w.remove(); }
+
+function addBubble(role, html){
+  removeWelcome();
+  const d=document.createElement("div"); d.className=`msg ${role}`;
+  const av=document.createElement("div"); av.className=`avatar ${role}`; av.textContent=role==="ai"?"AI":"👤";
+  const b=document.createElement("div"); b.className=`bubble ${role}`; b.innerHTML=html;
+  d.appendChild(av); d.appendChild(b); chatEl.appendChild(d); scrollBottom();
+  return b;
+}
+
+function addTyping(){
+  removeWelcome();
+  const d=document.createElement("div"); d.className="msg ai"; d.id="typing";
+  d.innerHTML='<div class="avatar ai">AI</div><div class="bubble ai"><div class="typing"><span></span><span></span><span></span></div></div>';
+  chatEl.appendChild(d); scrollBottom();
+}
+function removeTyping(){ const t=document.getElementById("typing"); if(t) t.remove(); }
+
+function escHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function formatReply(text){
+  const fmt = s => s
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>');
+
+  const lines = text.split("\n");
+  let html="", inOl=false, inUl=false;
+  const closeList=()=>{ if(inOl){html+="</ol>";inOl=false;} if(inUl){html+="</ul>";inUl=false;} };
+
+  for(const raw of lines){
+    const line=raw.trim(); if(!line){closeList();continue;}
+    const nm=line.match(/^(\d+)\.\s+(.*)/);
+    const bm=line.match(/^[-•]\s+(.*)/);
+    if(nm){ if(!inOl){closeList();html+="<ol>";inOl=true;} html+=`<li>${fmt(nm[2])}</li>`; }
+    else if(bm){ if(!inUl){closeList();html+="<ul>";inUl=true;} html+=`<li>${fmt(bm[1])}</li>`; }
+    else {
+      closeList();
+      const f=fmt(line);
+      if(/^TIP:/i.test(line)) html+=`<div class="tip">${f}</div>`;
+      else if(/^(NOTE:|⚠|IMPORTANT:|WARNING:)/i.test(line)) html+=`<div class="warn">${f}</div>`;
+      else html+=`<p>${f}</p>`;
+    }
+  }
+  closeList();
+  html+='<div class="src">Sourced from IDLS SOP documentation</div>';
+  return html;
+}
+
+async function send(preset){
+  const q = (preset || inp.value).trim();
+  if(!q||loading) return;
+  loading=true; sendBtn.disabled=true;
+  if(!preset){ inp.value=""; inp.style.height="auto"; }
+
+  addBubble("user", escHtml(q));
+  addTyping();
+  history.push({role:"user",content:q});
+
+  try {
+    const res = await fetch("/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({messages:history})
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    history.push({role:"assistant",content:data.reply});
+    removeTyping();
+    addBubble("ai", formatReply(data.reply));
+  } catch(err){
+    removeTyping();
+    addBubble("ai",`<div class="err">⚠️ ${escHtml(err.message)}<br><br><small>For urgent help: <strong>support@dashlogistics.com</strong></small></div>`);
+  }
+  loading=false; sendBtn.disabled=false; inp.focus(); scrollBottom();
+}
+</script>
+</body>
+</html>
